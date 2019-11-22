@@ -1,6 +1,7 @@
 import xlrd
 import datetime
 
+#Before start, upload in derectory argus and oracle devices lists in excel sheets
 #init vars and dicts
 
 dev_exist = {}
