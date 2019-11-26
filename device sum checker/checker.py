@@ -9,6 +9,7 @@ new_devices = {}
 dev_exist_names = {}
 dev_balance = {}
 balance_counter = {}
+dev_for_correction = {}
 a = ''
 find = False
 s = str(datetime.date.today())
@@ -74,6 +75,12 @@ while a != 'end':
                         new_devices[i].pop()
                         balance_counter.update({i:balance_counter[i]-1})
                 elif i not in dev_balance.keys():
+                    new_devices.pop(i)
+                        if i in dev_for_correction.keys():
+                            dev_for_correction[i].append(a)
+                        else:
+                            dev_for_correction[i] = [a]
+                        
                     print(f"Требуется корректировка номенклатурного кода устройства:{i}")
 
                 break
