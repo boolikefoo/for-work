@@ -33,11 +33,10 @@ sheet_or = wbo.sheet_by_index(0)
 #make devices dict
 for i in range(sheet.nrows):
     if sheet.cell_value(i,5) in dev_exist.keys():
-        dev_exist[sheet.cell_value(i,5)].append(sheet.cell_value(i,8))
+        dev_exist[sheet.cell_value(i,5)].append(sheet.cell_value(i,8).lower())
         
-
     else:
-        dev_exist[sheet.cell_value(i,5)] = [sheet.cell_value(i,8)]
+        dev_exist[sheet.cell_value(i,5)] = [sheet.cell_value(i,8).lower()]
 
 for i in range(sheet.nrows):
     dev_exist_names[sheet.cell_value(i,5)] = sheet.cell_value(i,4)
@@ -53,6 +52,7 @@ print("для завершения программы введите end")
 
 while a != 'end':
     a = input("Введите серийный номер: ")
+    a = a.lower()
     for i in dev_exist.keys():
         for j in dev_exist[i]:
             #print(j)
@@ -74,7 +74,7 @@ while a != 'end':
                         print(f"Вы привысили максимальное число устройств для списания по текущей позиции: {i}")
                         new_devices[i].pop()
                         balance_counter.update({i:balance_counter[i]-1})
-                elif i not in dev_balance.keys():
+                elif i not in dev_balance.keys():   #Если требуется корректировка, удаляем SN из списка для списания и создаём новый список с устройствами для корректировки
                     new_devices.pop(i)
                     if i in dev_for_correction.keys():
                         dev_for_correction[i].append(a)
@@ -99,3 +99,4 @@ with open(s + " - list for correction.txt", "w") as outf:
         outf.write(f'{key}:{val}\n')
 #print(dev_exist_names.items())    
 #print(balance_counter)
+print(dev_exist)
