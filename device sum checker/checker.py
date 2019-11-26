@@ -76,10 +76,10 @@ while a != 'end':
                         balance_counter.update({i:balance_counter[i]-1})
                 elif i not in dev_balance.keys():
                     new_devices.pop(i)
-                        if i in dev_for_correction.keys():
-                            dev_for_correction[i].append(a)
-                        else:
-                            dev_for_correction[i] = [a]
+                    if i in dev_for_correction.keys():
+                        dev_for_correction[i].append(a)
+                    else:
+                        dev_for_correction[i] = [a]
                         
                     print(f"Требуется корректировка номенклатурного кода устройства:{i}")
 
@@ -93,6 +93,9 @@ while a != 'end':
 
 with open(s + " - checked.txt", "w") as outf:
     for key, val in new_devices.items():
+        outf.write(f'{key}:{val}\n')
+with open(s + " - list for correction.txt", "w") as outf:
+    for key, val in dev_for_correction.items():
         outf.write(f'{key}:{val}\n')
 #print(dev_exist_names.items())    
 #print(balance_counter)
