@@ -2,6 +2,7 @@ import xlrd
 from colored import fg, bg, attr
 from datetime import datetime
 
+#таблицы с остатками
 argus_path = 'data/argus.xlsx'
 oracle_path = 'data/oracle.xlsx'
 checked_path = 'data/checked.csv'
@@ -11,34 +12,43 @@ dataset = dict()
 trash_set = dict()
 #exist_set = dict()
 
-argus_name = 4
-argus_code = 5
-argus_sn = 8
+#Номер колонки по остаткам
+argus_name = 4  #Название по аргусу
+argus_code = 5  #Номенклатурный код по аргусу
+argus_sn = 8    #Серийный номер по аргусу
 
-oracle_name = 2
-oracle_code = 1
-oracle_amount = 25
+oracle_name = 2 #Название по ораклу
+oracle_code = 1 #Номенклатурый код по ораклу
+oracle_amount = 25  #Количество остатков по ораклу
+oracle_warehouse = 6    #Название склада по ораклу (складская организация)
 
+#читаем таблицу аргуса
 argus_file = xlrd.open_workbook(argus_path)
 argus_sheet = argus_file.sheet_by_index(0)
 
+#читаем таблицу оракла
 oracle_file = xlrd.open_workbook(oracle_path)
 oracle_sheet = oracle_file.sheet_by_index(0)
 
+#считаем остатки по складам
+
 for row_num in range(oracle_sheet.nrows):
     if oracle_sheet.cell_value(row_num, oracle_code) in amount_set:
-        print(oracle_sheet.cell_value(row_num, oracle_code), 'Уже есть в словаре', amount_set[oracle_sheet.cell_value(row_num, oracle_code)]['Количество по ораклу'])
-        print(amount_set[oracle_sheet.cell_value(row_num, oracle_code)]['Количество по ораклу'], oracle_sheet.cell_value(row_num, oracle_amount))
-        amount_set[oracle_sheet.cell_value(row_num, oracle_code)]['Количество по ораклу'] += 5
-        amount_set[oracle_sheet.cell_value(row_num, oracle_code)]['Количество по ораклу']
-        print(oracle_sheet.cell_value(row_num, oracle_amount), 'текущее значение')
+        amount_set[oracle_sheet.cell_value(row_num, oracle_code)]['Количество по ораклу'] += oracle_sheet.cell_value(row_num, oracle_amount)
+        if oracle_sheet.cell_value(row_num, oracle_warehouse) in amount_set[oracle_sheet.cell_value(row_num, oracle_code)]['Склад/остаток']:
+            amount_set[oracle_sheet.cell_value(row_num, oracle_code)]['Склад/остаток'][oracle_sheet.cell_value(row_num, oracle_warehouse)] += oracle_sheet.cell_value(row_num, oracle_amount)
+        else:
+            amount_set[oracle_sheet.cell_value(row_num, oracle_code)]['Склад/остаток'].update({oracle_sheet.cell_value(row_num, oracle_warehouse) : oracle_sheet.cell_value(row_num, oracle_amount),})
     else:
         amount_set.update({oracle_sheet.cell_value(row_num, oracle_code): {
             'Название по Ораклу': oracle_sheet.cell_value(row_num, oracle_name),
             'Количество по ораклу': oracle_sheet.cell_value(row_num, oracle_amount),
+            'Склад/остаток' : {oracle_sheet.cell_value(row_num, oracle_warehouse) : oracle_sheet.cell_value(row_num, oracle_amount), },
         }})
 
-for row_num in range(argus_sheet.nrows):    # Создаём сводный словарь оракл + аргус
+#print(amount_set)
+# Создаём сводный словарь оракл + аргус
+for row_num in range(argus_sheet.nrows):    
     if argus_sheet.cell_value(row_num, argus_code) in amount_set:
         oracle_data = amount_set[argus_sheet.cell_value(row_num, argus_code)]
     else:
@@ -50,7 +60,7 @@ for row_num in range(argus_sheet.nrows):    # Создаём сводный сл
         'Данные по ораклу': oracle_data
     }})
 
-# вычитаем из словаря ракла готовые к списанию устройства.
+# вычитаем из словаря оракла готовые к списанию устройства.
 try:
     exist_file = open(checked_path, 'r')
     print('%s\n\n\nПодгружены данные предыдущего отчёта%s' % (fg(6), attr(0)))
@@ -59,7 +69,7 @@ try:
         if device[2] in amount_set:
             amount_set[device[2]]['Количество по ораклу'] -= 1
         trash_set.update({device[0]: {device[1]: device[2]}})
-        print(trash_set)
+        # print(trash_set)
 except FileNotFoundError:
     print('%s\n\n\nРанее созданные отчёты отсутствуют!%s' % (fg(4), attr(0)))
 
@@ -75,6 +85,7 @@ def add_line(line):
 
 
 def serial_check(serial):
+    answer = ''
 
     if serial in dataset.keys():
         if dataset[serial]['Данные по ораклу'] == 'Данная позиция отсутствует в Оракле':
@@ -85,38 +96,44 @@ def serial_check(serial):
         or_name = dataset[serial]['Данные по ораклу']['Название по Ораклу']
         ar_name = dataset[serial]['Название по аргусу']
         sn_code = dataset[serial]['Код по аргусу']
-        amount_av = ''
+
         print(f'%sСерийрый номер - %s{serial} %s- найден!%s' %
               (fg(2), fg(3), fg(2), attr(0)))
+        print(dataset[serial]['Данные по ораклу']['Склад/остаток'])
         print(
             f'%sУстройство по аргусу - {ar_name}\nУстройство по ораклу - {or_name} %s' % (fg(2), attr(0)))
         #print(f'%sУстройство по аргусу- {ar_name}\nУстройство по ораклу {or_name} %s' % (fg(2), attr(0)))
         if ar_name != or_name:
             print('%sНе совпадает название.%s' % (fg(1), attr(0)))
+            answer = input('Подготовить к списанию? Y/N: ').lower()
 
-        else:
-            print(f'%sТекущее поличество по ораклу:%s {amount_set[sn_code]["Количество по ораклу"]}' % (
-                fg(5), attr(0)))
-            print(f'%sГотовим к списанию: %s{serial.upper()}%s' % (
-                fg(3), fg(3), attr(0)))
+        print(f'%sТекущее поличество по ораклу:%s {amount_set[sn_code]["Количество по ораклу"]}' % (
+            fg(5), attr(0)))
+        print(f'%sГотовим к списанию: %s{serial.upper()}%s' % (
+            fg(3), fg(3), attr(0)))
 
-            if amount_set[sn_code]['Количество по ораклу'] > 0:
-                if serial in trash_set:
-                    print('%sДанный серийный номер уже находится в списке к списанию!!!!!%s' % (
-                        fg(1), attr(0)))
-                else:
-                    listok = [serial, dataset[serial]['Название по аргусу'],
-                              dataset[serial]['Код по аргусу']]
-                    line = ';'.join(listok)
-                    add_line(line)
-                    trash_set.update(
-                        {serial: {dataset[serial]['Название по аргусу']: dataset[serial]['Код по аргусу']}})
-                    amount_set[sn_code]['Количество по ораклу'] -= 1
-                    print('Осталось к списанию:',
-                          amount_set[sn_code]['Количество по ораклу'])
+        if amount_set[sn_code]['Количество по ораклу'] > 0:
+            if serial in trash_set:
+                print('%sДанный серийный номер уже находится в списке к списанию!!!!!%s' % (
+                    fg(1), attr(0)))
+            elif answer == 'n':
+                answer = ''
+            else:
 
-            elif amount < 1:
-                print(f'%sНет едениц для списания.%s' % (fg(1), attr(0)))
+                listok = [serial, dataset[serial]['Название по аргусу'],
+                          dataset[serial]['Код по аргусу'],
+                          str(dataset[serial]['Данные по ораклу']['Склад/остаток'].items()),
+                          ]
+                line = ';'.join(listok)
+                add_line(line)
+                trash_set.update(
+                    {serial: {dataset[serial]['Название по аргусу']: dataset[serial]['Код по аргусу']}})
+                amount_set[sn_code]['Количество по ораклу'] -= 1
+                print('Осталось к списанию:',
+                      amount_set[sn_code]['Количество по ораклу'])
+
+        elif amount < 1:
+            print(f'%sНет едениц для списания.%s' % (fg(1), attr(0)))
 
     else:
         print(f'%sСерийный номер %s{serial} %s%s - не найден!%s' %

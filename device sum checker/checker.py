@@ -99,4 +99,4 @@ with open(s + " - list for correction.txt", "w") as outf:
         outf.write(f'{key}:{val}\n')
 #print(dev_exist_names.items())    
 #print(balance_counter)
-print(dev_exist)
+#print(dev_exist)

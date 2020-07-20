@@ -16,7 +16,7 @@ sheet_or = wbo.sheet_by_index(0)
 
 dct = {}
 
-with open("2019-11-26 - checked.txt", "r") as inf:
+with open("2020-04-13 - checked.txt", "r") as inf:
     for line in inf:
         (key, val) = line.strip("\n").split(":")
         dct[key] = val.strip("[']").split("', '")
@@ -33,8 +33,11 @@ for i in range(sheet_or.nrows):
 
 for key in dct.keys():
     for val in dct[key]:
+        #print(val)   #Печатаем SN 
         
-        if key in dev_exist_names.keys():
+        if key in dev_exist_names.keys(): #Получаем наименования оборудования
             print(dev_exist_names[key] )
+        #print(key)   #Печатаем номенклатурный код   
+        
 #print(dev_exist_names)
 
