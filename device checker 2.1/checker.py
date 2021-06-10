@@ -21,6 +21,8 @@ oracle_name = 2 #Название по ораклу
 oracle_code = 1 #Номенклатурый код по ораклу
 oracle_amount = 27 #Количество остатков по ораклу (26 - колонка АА)
 oracle_warehouse = 6    #Название склада по ораклу (складская организация)
+oracle_ware_name = 7    #Складское подразделение
+oracle_ware_orgname = 6 #Складская организация
 
 #читаем таблицу аргуса
 argus_file = xlrd.open_workbook(argus_path)
@@ -43,7 +45,9 @@ for row_num in range(oracle_sheet.nrows):
         amount_set.update({oracle_sheet.cell_value(row_num, oracle_code): {
             'Название по Ораклу': oracle_sheet.cell_value(row_num, oracle_name),
             'Количество по ораклу': oracle_sheet.cell_value(row_num, oracle_amount),
-            'Склад/остаток' : {oracle_sheet.cell_value(row_num, oracle_warehouse) : oracle_sheet.cell_value(row_num, oracle_amount), },
+            'Склад/остаток' : {oracle_sheet.cell_value(row_num, oracle_warehouse) : oracle_sheet.cell_value(row_num, oracle_amount)},
+            'Складское подразделение' : oracle_sheet.cell_value(row_num, oracle_ware_name),
+            'Складская организация' : oracle_sheet.cell_value(row_num, oracle_ware_orgname),
         }})
 
 #print(amount_set)
@@ -83,6 +87,8 @@ def add_line(line):
     checked_file.close()
     return print('%sЗапись добавлена.%s' % (fg(28), attr(0)))
 
+def remove_line():
+    pass
 
 def serial_check(serial):
     answer = ''
@@ -96,6 +102,8 @@ def serial_check(serial):
         or_name = dataset[serial]['Данные по ораклу']['Название по Ораклу']
         ar_name = dataset[serial]['Название по аргусу']
         sn_code = dataset[serial]['Код по аргусу']
+        or_ware_name = dataset[serial]['Данные по ораклу']['Складское подразделение']
+        or_ware_orgname = dataset[serial]['Данные по ораклу']['Складская организация']
 
         print(f'%sСерийрый номер - %s{serial} %s- найден!%s' %
               (fg(2), fg(3), fg(2), attr(0)))
@@ -122,6 +130,8 @@ def serial_check(serial):
 
                 listok = [serial, dataset[serial]['Название по аргусу'],
                           dataset[serial]['Код по аргусу'],
+                          dataset[serial]['Данные по ораклу']['Складское подразделение'],
+                          dataset[serial]['Данные по ораклу']['Складская организация'],
                           str(dataset[serial]['Данные по ораклу']['Склад/остаток'].items()),
                           ]
                 line = ';'.join(listok)
